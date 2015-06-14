@@ -167,6 +167,8 @@ declarar_funcao
 
 										if(strcmp($1->tableItem->key,"main")!=0)
 										{	
+											frameOffset+=4; // estado de máquina
+											frameOffset+=4; // VE mesmo sendo 0 é importante colocar
 											frameOffset+=4; // VD antigo fp
 											frameOffset+=4; // sp anterior 
 											frameOffset+=4; // end retorno vai ser o valor de um inteiro

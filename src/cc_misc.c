@@ -15,11 +15,9 @@ void yyerror (char const *mensagem)
 void main_init (int argc, char **argv)
 {
   //implemente esta função com rotinas de inicialização, se necessário
-	printf("sim\n");
   if(argc != 2)
 	{
 	  fOutput = stdout;////fopen(argv[2], "w");
-	  printf("sim\n");
   }
 	dict_create(100);
 	//stack_initialize(main_stack);

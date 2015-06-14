@@ -205,8 +205,8 @@ char* astCodeGenerate(comp_tree_t* ast)
 	{
 		case AST_PROGRAMA:
 			strcat(createdCode,basicCodeGeneration(op_loadI,"0",NULL,"rbss"));
-			strcat(createdCode,basicCodeGeneration(op_loadI,"1024",NULL,"fp"));
-			strcat(createdCode,basicCodeGeneration(op_loadI,"1024",NULL,"sp"));
+			strcat(createdCode,basicCodeGeneration(op_loadI,"0",NULL,"fp"));
+			strcat(createdCode,basicCodeGeneration(op_loadI,"0",NULL,"sp"));
 			// estabelece uma label para cada função do programa e da o jump direto para main quando inicia o programa
 			do
 			{
@@ -237,16 +237,15 @@ char* astCodeGenerate(comp_tree_t* ast)
 
 		case AST_FUNCAO:
 			strcpy(createdCode,basicCodeGeneration(op_label,ast->labelTrue,NULL,NULL));
-			// Parâmetros vão ficar voando pra sempre zzzz(Gabriel)
-			// Mas na 6ª eles voltam, relaxa ;3(Caiã)
 			if(strcmp(ast->tableItem->key,"main")!=0)
 			{
 				strcat(createdCode,basicCodeGeneration(op_i2i,"sp",NULL,"fp"));
 			}
 			strcat(createdCode,basicCodeGeneration(op_addI,"fp",integerToString(ast->tableItem->funcOffset),"sp"));
+			funcOffsetControl = ast->tableItem->funcOffset;
 			if(strcmp(ast->tableItem->key,"main") != 0)
 				{
-					funcOffsetControl = ast->tableItem->funcOffset;
+					
 					localVarSizeControl = ast->tableItem->localVarSize;
 					returnSizeControl = ast->tableItem->size;
 				}
@@ -348,7 +347,7 @@ char* astCodeGenerate(comp_tree_t* ast)
 			strcat(createdCode,astCodeGenerate(auxNodeList->nextNode->firstNode));
 			if(auxNodeList->firstNode->tableItem->isParam)
 			{
-				auxNodeList->firstNode->tableItem->offset += localVarSizeControl + 4;
+				auxNodeList->firstNode->tableItem->offset += localVarSizeControl + 8;
 				auxNodeList->firstNode->tableItem->isParam=0;
 			}
 			if(ast->tableItem->scopeType == globalDeclaration)
@@ -374,7 +373,7 @@ char* astCodeGenerate(comp_tree_t* ast)
 			strcpy(regLastFP,createRegister());
 			strcpy(regLastSP,createRegister());
 			strcpy(regret,createRegister());
-			strcat(createdCode,basicCodeGeneration(op_loadAI,"fp",integerToString(localVarSizeControl),regLastFP));
+			strcat(createdCode,basicCodeGeneration(op_loadAI,"fp",integerToString(localVarSizeControl+8),regLastFP));
 			strcat(createdCode,basicCodeGeneration(op_loadAI,"fp",integerToString(funcOffsetControl-12),regLastSP));
 			strcat(createdCode,basicCodeGeneration(op_loadAI,"fp",integerToString(funcOffsetControl-8),regret));
 			strcat(createdCode,basicCodeGeneration(op_i2i,regLastFP,NULL,"fp"));
@@ -412,8 +411,7 @@ char* astCodeGenerate(comp_tree_t* ast)
 			// modificação para verificar se a variavel é global para dar load no rbss ou no rarp sempre usando loadAI para usar o deslocamento dentro do rbss e rarp
 			if(ast->tableItem->isParam)
 			{
-				ast->tableItem->offset += localVarSizeControl;
-				printf("%d\n", ast->tableItem->offset);
+				ast->tableItem->offset += localVarSizeControl+8;
 				ast->tableItem->isParam=0;
 			}
 			sprintf(idoffset,"%d",ast->tableItem->offset);
@@ -430,17 +428,14 @@ char* astCodeGenerate(comp_tree_t* ast)
 				strcat(createdCode,astCodeGenerate(auxNodeList->firstNode));
 				auxNodeList = auxNodeList->nextNode;
 			}
-			printf("%d\n",ast->tableItem->size);
 			strcat(createdCode,basicCodeGeneration(op_loadI,ast->tableItem->key,NULL,ast->reg));
 			break;
 
 		case AST_ARIM_SOMA:
 			strcpy(ast->reg,createRegister());
-			while(auxNodeList != NULL && auxNodeList->firstNode != NULL)
-			{
-				strcat(createdCode,astCodeGenerate(auxNodeList->firstNode));
-				auxNodeList = auxNodeList->nextNode;
-			}
+			strcat(createdCode,astCodeGenerate(auxNodeList->firstNode));
+			strcat(createdCode,astCodeGenerate(auxNodeList->nextNode->firstNode));
+			
 			if(ast->childNodeList->nextNode->firstNode->tableItem != NULL)
 			{
 				if(ast->childNodeList->nextNode->firstNode->tableItem->tipo == SIMBOLO_IDENTIFICADOR)
@@ -456,12 +451,8 @@ char* astCodeGenerate(comp_tree_t* ast)
 
 		case AST_ARIM_SUBTRACAO:
 			strcpy(ast->reg,createRegister());
-			while(auxNodeList != NULL && auxNodeList->firstNode != NULL)
-			{
-
-				strcat(createdCode,astCodeGenerate(auxNodeList->firstNode));
-				auxNodeList = auxNodeList->nextNode;
-			}
+			strcat(createdCode,astCodeGenerate(auxNodeList->firstNode));
+			strcat(createdCode,astCodeGenerate(auxNodeList->nextNode->firstNode));
 			if(ast->childNodeList->nextNode->firstNode->tableItem != NULL)
 			{	
 				if(ast->childNodeList->nextNode->firstNode->tableItem->tipo == SIMBOLO_IDENTIFICADOR)
@@ -483,11 +474,8 @@ char* astCodeGenerate(comp_tree_t* ast)
 
 		case AST_ARIM_MULTIPLICACAO:
 			strcpy(ast->reg,createRegister());
-			while(auxNodeList != NULL && auxNodeList->firstNode != NULL)
-			{
-				strcat(createdCode,astCodeGenerate(auxNodeList->firstNode));
-				auxNodeList = auxNodeList->nextNode;
-			}
+			strcat(createdCode,astCodeGenerate(auxNodeList->firstNode));
+			strcat(createdCode,astCodeGenerate(auxNodeList->nextNode->firstNode));
 			if(ast->childNodeList->nextNode->firstNode->tableItem != NULL)
 				if(ast->childNodeList->nextNode->firstNode->tableItem->tipo == SIMBOLO_IDENTIFICADOR)
 					strcat(createdCode,basicCodeGeneration(op_mult,ast->childNodeList->firstNode->reg,ast->childNodeList->nextNode->firstNode->reg,ast->reg));
@@ -501,11 +489,8 @@ char* astCodeGenerate(comp_tree_t* ast)
 
 		case AST_ARIM_DIVISAO:
 			strcpy(ast->reg,createRegister());
-			while(auxNodeList != NULL && auxNodeList->firstNode != NULL)
-			{
-				strcat(createdCode,astCodeGenerate(auxNodeList->firstNode));
-				auxNodeList = auxNodeList->nextNode;
-			}
+			strcat(createdCode,astCodeGenerate(auxNodeList->firstNode));
+			strcat(createdCode,astCodeGenerate(auxNodeList->nextNode->firstNode));
 			if(ast->childNodeList->nextNode->firstNode->tableItem->tipo == SIMBOLO_IDENTIFICADOR)
 			{	
 				if (ast->childNodeList->firstNode->tableItem->tipo == SIMBOLO_IDENTIFICADOR)
@@ -734,6 +719,8 @@ char* astCodeGenerate(comp_tree_t* ast)
 						auxNodeListVectors = auxNode->childNodeList;
 						auxNode = auxNodeListVectors->firstNode;
 						update = 1;
+						if(auxNode!=NULL)
+							strcat(createdCode,astCodeGenerate(auxNode));
 
 					}
 				}
@@ -794,10 +781,12 @@ char* astCodeGenerate(comp_tree_t* ast)
 			break;
 
 		case AST_CHAMADA_DE_FUNCAO:
-			strcat(createdCode,basicCodeGeneration(op_storeAI,integerToString(ILOCLineNumber+4),"sp",integerToString(ast->tableItem->funcOffset-8)));
+			strcat(createdCode,basicCodeGeneration(op_storeAI,integerToString(ILOCLineNumber+6),"sp",integerToString(ast->tableItem->funcOffset-8)));
 			strcat(createdCode,basicCodeGeneration(op_storeAI,"sp","sp",integerToString(ast->tableItem->funcOffset-12)));
-			strcat(createdCode,basicCodeGeneration(op_storeAI,"fp","sp",integerToString(ast->tableItem->localVarSize)));
-			paramLocation=ast->tableItem->localVarSize+4;
+			strcat(createdCode,basicCodeGeneration(op_storeAI,integerToString(funcOffsetControl),"sp",integerToString(ast->tableItem->localVarSize))); // estado de máquina anterior
+			strcat(createdCode,basicCodeGeneration(op_storeAI,"0","sp",integerToString(ast->tableItem->localVarSize+4))); // vinculo estático sempre 0
+			strcat(createdCode,basicCodeGeneration(op_storeAI,"fp","sp",integerToString(ast->tableItem->localVarSize+8)));
+			paramLocation=ast->tableItem->localVarSize+12;
 			if(auxNodeList->nextNode!=NULL)
 			{
 				auxNodeList=auxNodeList->nextNode;
@@ -815,7 +804,8 @@ char* astCodeGenerate(comp_tree_t* ast)
 							paramLocation+= auxNodeList->firstNode->childNodeList->nextNode->firstNode->tableItem->size;
 
 						auxNodeList=auxNodeList->firstNode->childNodeList->nextNode->nextNode;
-
+						if(auxNodeList!=NULL)
+							strcat(createdCode,astCodeGenerate(auxNodeList->firstNode));
 							
 					}
 					else if(auxNodeList->firstNode->nodeType == AST_IDENTIFICADOR)
