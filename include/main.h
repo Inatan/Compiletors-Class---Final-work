@@ -11,6 +11,9 @@
 #include "cc_tree.h"
 #include "cc_stack.h"
 #include "parser.h"
+ #include "cc_ILOCreader.h"
+#include <string.h>
+#include "cc_otimization.h"
 
 /*
   Constantes a serem utilizadas como valor de retorno no caso de

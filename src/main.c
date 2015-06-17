@@ -103,33 +103,54 @@ int main_avaliacao_etapa_7 (int argc, char **argv)
 
 int main (int argc, char **argv)
 {
-  //if some argument is provided, treat it as input
-  if (argc != 1){
-    yyin = fopen(argv[1], "r");
-    //if fopen fails, yyin continues to be stdin
-    if (yyin == NULL){
-      yyin = stdin;
-    }
+  if(argc ==2 && strstr(argv[1],".i")) 
+  {
+      char *nwCode;
+      cc_ILOCinstLst_t *instList;
+      
+      readIloc(argv[1], &instList);
+      cc_dominationTree_t * tree;
+      cc_graphVertexList_t* graph;
+      searchLeaders(&instList);
+      otimizateIlocInst(&instList);
+      createGraphOtm(&graph,instList);
+      tree = NULL;
+      tree=createDominationTree(&graph->vertexInfo);
+      detectLoopinGraph(&graph,tree);
+      findUnvariantComand(&graph);
+      nwCode=newCode(graph);
   }
-  USER_INIT;
-  int r;
-#ifdef AVALIACAO_ETAPA_1
-  r = main_avaliacao_etapa_1 (argc, argv);
-#elif AVALIACAO_ETAPA_2
-  r = main_avaliacao_etapa_2 (argc, argv);
-#elif AVALIACAO_ETAPA_3
-  r = main_avaliacao_etapa_3 (argc, argv);
-#elif AVALIACAO_ETAPA_4
-  r = main_avaliacao_etapa_4 (argc, argv);
-#elif AVALIACAO_ETAPA_5
-  r = main_avaliacao_etapa_5 (argc, argv);
-#elif AVALIACAO_ETAPA_6
-  r = main_avaliacao_etapa_6 (argc, argv);
-#elif AVALIACAO_ETAPA_7
-  r = main_avaliacao_etapa_7 (argc, argv);
-#else
-  r = 0;
-#endif
-  USER_FINALIZE;
-  return r;
+  else
+  { 
+    if (argc != 1)
+    {
+      //if some argument is provided, treat it as inpu
+          yyin = fopen(argv[1], "r");
+          //if fopen fails, yyin continues to be stdin
+          if (yyin == NULL){
+            yyin = stdin;
+          }
+      }
+      USER_INIT;
+      int r;
+    #ifdef AVALIACAO_ETAPA_1
+      r = main_avaliacao_etapa_1 (argc, argv);
+    #elif AVALIACAO_ETAPA_2
+      r = main_avaliacao_etapa_2 (argc, argv);
+    #elif AVALIACAO_ETAPA_3
+      r = main_avaliacao_etapa_3 (argc, argv);
+    #elif AVALIACAO_ETAPA_4
+      r = main_avaliacao_etapa_4 (argc, argv);
+    #elif AVALIACAO_ETAPA_5
+      r = main_avaliacao_etapa_5 (argc, argv);
+    #elif AVALIACAO_ETAPA_6
+      r = main_avaliacao_etapa_6 (argc, argv);
+    #elif AVALIACAO_ETAPA_7
+      r = main_avaliacao_etapa_7 (argc, argv);
+    #else
+      r = 0;
+    #endif
+      USER_FINALIZE;
+    return r;
+  }
 }
